@@ -1,9 +1,6 @@
-# PHP
-
-version: '2'
+version: '1'
 
 services:
-
   phpfpm:
     build: ./.docker/images/php-fpm
     volumes:
@@ -40,7 +37,6 @@ services:
       LETSENCRYPT_HOST: $LETSENCRYPT_HOST
       LETSENCRYPT_EMAIL: $LETSENCRYPT_EMAIL
 
-  # MYSQL
   db:
     image: mysql
     ports:
