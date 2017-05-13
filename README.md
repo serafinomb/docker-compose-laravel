@@ -12,7 +12,7 @@
 - Review and run the deploy.sh script
 - Run docker-compose up -d
 
-You should be able to view your laravel project at http://localhost or at http://VIRTUAL\_HOST
+You should be able to view your laravel project at http://localhost or at http://VIRTUAL_HOST
 
 ---
 
