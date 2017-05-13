@@ -7,6 +7,8 @@
 # http://stackoverflow.com/a/29251160/2141119
 chown -R 33:33 app
 
+docker-compose exec phpfpm php artisan key:generate
+
 # We cannot run the migration on the composer post-install hook because it would
 # run from the "composer" container which isn't capable of running "artisan"
 # (which basically has the same requirements as a Laravel application). We will
