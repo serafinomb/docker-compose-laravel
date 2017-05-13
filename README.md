@@ -9,8 +9,8 @@
 - Copy/clone your laravel project inside `/app`
 - Check out the `/app/.env.docker-example` file for the database connection info
 - Optional: Rename `.env.example` into `.env` and customize the variables
-- Review and run the `deploy.sh` script
 - Run `docker-compose up -d`
+- Review and run the `deploy.sh` script
 
 You should be able to view your laravel project at http://localhost or at http://VIRTUAL_HOST
 
