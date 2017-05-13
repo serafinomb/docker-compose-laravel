@@ -1,6 +1,5 @@
 FROM php:7-fpm
 
-# Install modules
 RUN apt-get update && apt-get install -y \
 	libmcrypt-dev  \
 	libicu-dev \
@@ -10,6 +9,5 @@ RUN apt-get update && apt-get install -y \
 	&& docker-php-ext-install mcrypt \
 	&& docker-php-ext-install intl \
 	&& docker-php-ext-install opcache
- 
-CMD ["php-fpm"]
 
+CMD ["php-fpm"]
