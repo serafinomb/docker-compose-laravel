@@ -1,0 +1,5 @@
+.idea
+.DS_Store
+.docker/images/proxy/*/*
+!.docker/images/proxy/*/.gitkeep
+.env
