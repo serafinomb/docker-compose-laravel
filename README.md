@@ -16,5 +16,15 @@ You should be able to view your laravel project at http://localhost or at http:/
 
 ---
 
-The docker-compose configuration from devigner/docker-compose-php has been
-used as a starting point: <https://github.com/devigner/docker-compose-php>
+The following docker-compose configuration <https://github.com/devigner/docker-compose-php> has been used as a starting point.
+
+---
+
+#### Notes
+After restarting the containers `$ docker-compose up -d --force-recreate` I had the following error when making requests to the nginx instance `$ curl -H "Host: <VIRTUAL_HOST>" 0.0.0.0`:
+```
+[error] 18#18: *1 directory index of "/usr/share/nginx/html/" is forbidden, client: 172.18.0.1, server: localhost, request: "GET / HTTP/1.1", host: "<VIRTUAL_HOST>"
+```
+I debugged this thing for almost two evenings and finally solved it by removing `$ docker rm -f <container id> ...` all the related containers and running a `$ docker-compose up -d`.
+
+Use `$ docker ps -a` for a list of all containers.
