@@ -6,6 +6,9 @@
 #
 # http://stackoverflow.com/a/29251160/2141119
 chown -R 33:33 app
+chmod -R g+rwx app
+
+docker-compose up -d --force-recreate
 
 docker-compose exec phpfpm php artisan key:generate
 
