@@ -41,6 +41,12 @@ services:
     volumes:
       - ./app:/app
 
+  node:
+    image: node:8.1
+    command: bash -c "cd app && yarn install && npm run docker-up"
+    volumes:
+      - ./app:/app
+
 volumes:
   data_volume:
 
