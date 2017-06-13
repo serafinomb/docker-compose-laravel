@@ -14,6 +14,15 @@
 
 You should be able to view your laravel project at http://localhost or at http://VIRTUAL_HOST
 
+### Run multiple applications
+Run a single nginx-proxy with
+```
+$ docker network create nginx-proxy
+$ docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro --net nginx-proxy jwilder/nginx-proxy
+```
+
+(WIP)
+
 ---
 
 The following docker-compose configuration <https://github.com/devigner/docker-compose-php> has been used as a starting point.
