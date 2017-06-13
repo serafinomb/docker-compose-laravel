@@ -51,3 +51,9 @@ Use `$ docker ps -a` for a list of all containers.
 I had a 503 permission issue on the Mac Pro (read Hackintosh) at home. I tried this evening to do the same steps on my Macbook Air and everything went fine.
 I've to investigate this and try again on the Mac Pro but I've the feeling that the issue might have been caused by running the `deploy.sh` script as "sudo".
 I suggest to `rm` the "app" folder completely and re-clone your project, and run the commands manually. Until I get to make a good deploy script.
+Right– I fixed this by running `chmod -R g+rwx app`.
+
+---
+
+I also had problems connecting to the MySQL database, something about allowed domain to connect to the database. I had no issue on this machine (Macbook Air) though.
+I need to investigate into it.
