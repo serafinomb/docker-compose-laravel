@@ -15,9 +15,9 @@
 - Add the `VIRTUALHOST` domain, if set in the `.env` file, to your `hosts` file.
 
 Mind that the `composer` container will probably fail the first time for reasons I'm not
-sure at the moment, I'm a little tired and I'm too lazy to re-run the `docker-compose up -d`
+sure about at the moment, I'm a little tired and I'm too lazy to re-run the `docker-compose up -d`
 from a clean app to check. If you get the usual "cannot require composer"-something something
-error just run `docker-compose composer up -d`.
+error just run `docker-compose composer up -d` again.
 
 You should be able to view your laravel project at http://localhost or at http://VIRTUAL_HOST
 
