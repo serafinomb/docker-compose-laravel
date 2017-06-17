@@ -1,5 +1,5 @@
 ## A docker-compose configuration to set up a ready-to-use laravel environment.
-- PHP 7
+- PHP 7, with Xdebug
 - MySQL
 - Nginx
 - Composer
@@ -18,6 +18,9 @@ Mind that the `composer` container will probably fail the first time for reasons
 sure about at the moment, I'm a little tired and I'm too lazy to re-run the `docker-compose up -d`
 from a clean app to check. If you get the usual "cannot require composer"-something something
 error just run `docker-compose composer up -d` again.
+I've just re-run a "docker-compose up -d" on a clean project and composer didn't fail but is taking
+its time to install the dependencies. So if it doesn't fail, wait till it's done (it will stop) to
+run any command in your application.
 
 You should be able to view your laravel project at http://localhost or at http://VIRTUAL_HOST
 
@@ -30,6 +33,10 @@ different domains.
 $ docker network create nginx-proxy
 $ docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro --net nginx-proxy jwilder/nginx-proxy
 ```
+
+### 2. Xdebug
+Xdebug is installed and enabled by default in the "phpfpm" container. All you need to do to start using
+it is set your private IP in ".docker/images/php-fpm/php.ini" in the "xdebug.remote_host" option.
 
 ---
 
@@ -57,3 +64,5 @@ Right– I fixed this by running `chmod -R g+rwx app`.
 
 I also had problems connecting to the MySQL database, something about allowed domain to connect to the database. I had no issue on this machine (Macbook Air) though.
 I need to investigate into it.
+I tried again on my Mac Pro and running the `deploy.sh` script as "sudo" might have caused the MySQL issue. I removed the volumes and rerun `docker-compose up -d`
+and everything is working fine now. Use `docker volume` to manage your volumes.

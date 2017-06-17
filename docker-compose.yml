@@ -3,6 +3,8 @@ version: '2'
 services:
   phpfpm:
     build: ./.docker/images/php-fpm
+    expose:
+      - 9000
     volumes:
       - ./.docker/images/php-fpm/php-fpm.conf:/usr/local/etc/php-fpm.conf
       - ./.docker/images/php-fpm/php.ini:/usr/local/etc/php/php.ini
