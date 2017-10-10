@@ -38,6 +38,25 @@ $ docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro --net nginx
 Xdebug is installed and enabled by default in the "phpfpm" container. All you need to do to start using
 it is set your private IP in ".docker/images/php-fpm/php.ini" in the "xdebug.remote_host" option.
 
+### 3. Database tunneling
+If you are working with a remote database, example Amazon RDS, and you need to enstablish a tunnel connection to connect to it:
+
+- Copy your PEM certificate into the `/app/storage` folder
+- Add the following line to your `.gitignore` to make sure not to commit your PEM file by mistake: `/storage/*.pem`
+- Edit the `docker-compose.yml`, adding the following line inside the "services", "php", "expose" section: `- 33060`. It should look something like this:
+```yml
+  3 services:
+  4   phpfpm:
+  5     build: ./.docker/images/php-fpm
+  6     expose:
+  7       - 9000
++ 8       - 33060
+  9 ...
+```
+- (Optional) You can remove the entire "db" section from the docker-compose.yml file
+- Install the SSH client to with `apt update && apt install openssh-client`
+- Enstablish the SSH tunnel with `ssh -i storage/<keypair name>.pem -4 -o ServerAliveInterval=30 -f <user>@<machine ip> -L 33060:<databse dns>:3306 -N`
+- Edit your .env file as follows: `DB_HOST=127.0.0.1` and `DB_PORT=33060`
 ---
 
 The following docker-compose configuration <https://github.com/devigner/docker-compose-php> has been used as a starting point.
