@@ -54,7 +54,7 @@ If you are working with a remote database, example Amazon RDS, and you need to e
 ```
 - (Optional) You can remove the entire "db" section from the docker-compose.yml file
 - Restart the containers with `docker-compose up -d --force-recreate`
-- Install the SSH client with `docker-compose exec phpfpm apt update && apt install openssh-client`
+- Install the SSH client with `docker-compose exec phpfpm /bin/bash -c "apt update && apt install openssh-client"`
 - Enstablish the SSH tunnel with `docker-compose exec phpfpm ssh -i storage/<keypair name>.pem -4 -o ServerAliveInterval=30 -f <user>@<machine ip> -L 33060:<databse dns>:3306 -N`
 - Edit your .env file as follows: `DB_HOST=127.0.0.1` and `DB_PORT=33060`
 ---
