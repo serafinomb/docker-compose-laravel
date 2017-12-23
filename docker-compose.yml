@@ -45,7 +45,7 @@ services:
 
   node:
     image: node:8.1
-    command: bash -c "cd /var/www/html/resources/adminator && yarn install && node node_modules/node-sass/scripts/install.js && yarn run build"
+    command: bash -c "cd /var/www/html && yarn install && node node_modules/node-sass/scripts/install.js; yarn run build"
     volumes:
       - ./app:/var/www/html
 
