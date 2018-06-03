@@ -85,3 +85,17 @@ I also had problems connecting to the MySQL database, something about allowed do
 I need to investigate into it.
 I tried again on my Mac Pro and running the `deploy.sh` script as "sudo" might have caused the MySQL issue. I removed the volumes and rerun `docker-compose up -d`
 and everything is working fine now. Use `docker volume` to manage your volumes.
+
+---
+
+While creating a new environment I encountered the following error while connecting to MySQL through Sequel Pro:
+```
+MySQL said: Authentication plugin 'caching_sha2_password' cannot be loaded: dlopen(/usr/local/lib/plugin/caching_sha2_password.so, 2): image not found
+```
+
+I solved this by logging in into the mysql docker-compose container and running:
+1. docker exec -it <app_name>_db_1 bash
+2. mysql -u root -p 123456
+3. `ALTER USER 'user' IDENTIFIED WITH mysql_native_password BY 'password';`
+
+From <https://stackoverflow.com/a/50130973/2141119>
