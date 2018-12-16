@@ -3,7 +3,6 @@
 - MySQL
 - Nginx
 - Composer
-- Node, with NPM
 
 ### Usage
 - Clone the repository inside your project root (<project-dir>/.docker for exmaple)
