@@ -6,13 +6,21 @@
 - Node, with NPM
 
 ### Usage
-- Clone the repository
-- Copy/clone your laravel project inside `/app`
-- Review the `/app/.env.docker-example` file for the database connection info
+- Clone the repository inside your project root (<project-dir>/.docker for exmaple)
+- Update your database connection configuration:
+    - DB_CONNECTION=mysql
+    - DB_HOST=db
+    - DB_PORT=3306
+    - DB_DATABASE=database
+    - DB_USERNAME=user
+    - DB_PASSWORD=password
 - Optional: Rename `.env.example` into `.env` and customize the variables
-- If not using the Nutella (stand-alone) compose file: create a new network and run the nginx-proxy container (see 1. below)
-- Review and run the `deploy.sh` script.
-- Add the `VIRTUALHOST` domain, if set in the `.env` file, to your `hosts` file.
+- Create a new network and run the nginx-proxy container (see 1. below)
+- From whitin the .docker folder, review (and run if needed) the `deploy.sh` script.
+
+##### -p $(basename $(dirname $(pwd)))
+To avoid volume collision always remember to pass in the "-p $(basename $(dirname $(pwd)))" option
+when running docker-compose.
 
 Mind that the `composer` container will probably fail the first time for reasons I'm not
 sure about at the moment, I'm a little tired and I'm too lazy to re-run the `docker-compose up -d`
@@ -24,10 +32,13 @@ run any command in your application.
 
 You should be able to view your laravel project at http://localhost or at http://VIRTUAL_HOST
 
-### 1. Run multiple applications
-I've not tested this deeply but this should allow us to have multiple nxing-app running at the
-same time, with different virtual hosts, allowing us to have multiple applications with
-different domains.
+### 1. Running multiple applications
+As of right now it's not possible to run multiple Laravel applications at the same time. Even if
+we can specify a custom hostname for each of them, the database host and database name is still
+shared accross all the instances. It can be fixed but I've not had the time nor the need to do
+so.
+Run the following commands to be able to specify a custom hostname for your application (for example
+project-name.client.localhost):
 
 ```
 $ docker network create nginx-proxy
@@ -37,8 +48,17 @@ $ docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro --net nginx
 ### 2. Xdebug
 Xdebug is installed and enabled by default in the "phpfpm" container. All you need to do to start using
 it is set your private IP in ".docker/images/php-fpm/php.ini" in the "xdebug.remote_host" option.
+I've had some issues setting this up on PHPStorm and will update this section once I've time to understand
+why.
 
-### 3. Database tunneling
+### 3. Node (NPM, Yarn)
+You'll probably also need npm/yarn, I'm currently using the "serafinomb/node" docker image
+(docker pull serafinomb/node). Usage can be as follows:
+- docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node node -v
+- docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node npm -v
+- docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node yarn -v
+
+### 4. Database tunneling
 If you are working with a remote database, example Amazon RDS, and you need to enstablish a tunnel connection to connect to it:
 
 - Copy your PEM certificate into the `/app/storage` folder
@@ -53,8 +73,8 @@ If you are working with a remote database, example Amazon RDS, and you need to e
 + 8       - 33060
 ```
 - (Optional) You can remove the entire "db" section from the docker-compose.yml file
-- Restart the containers with `docker-compose up -d --force-recreate`
-- Install the SSH client with `docker-compose exec phpfpm /bin/bash -c "apt update && apt install openssh-client"`
+- Restart the containers with `docker-compose -p $(basename $(dirname $(pwd))) up -d --force-recreate`
+- Install the SSH client with `docker-compose -p $(basename $(dirname $(pwd))) exec phpfpm /bin/bash -c "apt update && apt install openssh-client"`
 - Enstablish the SSH tunnel with `docker-compose exec phpfpm ssh -i storage/<keypair name>.pem -4 -o ServerAliveInterval=30 -f <user>@<machine ip> -L 33060:<databse dns>:3306 -N`
 - Edit your .env file as follows: `DB_HOST=127.0.0.1` and `DB_PORT=33060`
 ---
