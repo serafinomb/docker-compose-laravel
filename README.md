@@ -5,7 +5,7 @@
 - Composer
 
 ### Usage
-- Clone the repository inside your project root (<project-dir>/.docker for exmaple)
+- Clone the repository inside your project root (<project-dir>/.docker for example)
 - Update your database connection configuration:
     - DB_CONNECTION=mysql
     - DB_HOST=db
