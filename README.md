@@ -16,33 +16,32 @@
 - Optional: Rename `.env.example` into `.env` and customize the variables
 - Create a new network and run the nginx-proxy container (see 1. below)
 - From whitin the .docker folder, review (and run if needed) the `deploy.sh` script.
-
-##### -p $(basename $(dirname $(pwd)))
-To avoid volume collision always remember to pass in the "-p $(basename $(dirname $(pwd)))" option
-when running docker-compose.
-
-Mind that the `composer` container will probably fail the first time for reasons I'm not
-sure about at the moment, I'm a little tired and I'm too lazy to re-run the `docker-compose up -d`
-from a clean app to check. If you get the usual "cannot require composer"-something something
-error just run `docker-compose composer up -d` again.
-I've just re-run a "docker-compose up -d" on a clean project and composer didn't fail but is taking
-its time to install the dependencies. So if it doesn't fail, wait till it's done (it will stop) to
-run any command in your application.
-
+    
 You should be able to view your laravel project at http://localhost or at http://VIRTUAL_HOST
 
-### 1. Running multiple applications
-As of right now it's not possible to run multiple Laravel applications at the same time. Even if
-we can specify a custom hostname for each of them, the database host and database name is still
-shared accross all the instances. It can be fixed but I've not had the time nor the need to do
-so.
-Run the following commands to be able to specify a custom hostname for your application (for example
+##### Note about docker-compose -p (project)
+To avoid volume collision always remember to pass in a unique project name when running docker-compose. I am currently using the parent folder name as project name. Given this folder structure: `.../my-project/.docker`, running docker-compose -p $(basename $(dirname $(pwd))) from within the `.docker` folder will use `my-project` as project name.
+
+Add this function into your bash profile or zshenv to use the parent folder as project name:
+```bash
+function dcp() {
+    docker-compose -p $(basename $(dirname $(pwd))) $@
+}
+```
+
+### 1. Reverse proxy and running multiple applications
+Run the following commands to be able to use the custom hostname specified in the .env file (for example
 project-name.client.localhost):
 
 ```
 $ docker network create nginx-proxy
 $ docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro --net nginx-proxy jwilder/nginx-proxy
 ```
+
+As of right now it's not possible to run multiple Laravel applications at the same time. Even if
+we can specify a custom hostname for each of them, the database host and database name is still
+shared accross all the instances. It can be fixed but I've not had the time nor the need to do
+so.
 
 ### 2. Xdebug
 Xdebug is installed and enabled by default in the "phpfpm" container. All you need to do to start using
@@ -56,6 +55,13 @@ You'll probably also need npm/yarn, I'm currently using the "serafinomb/node" do
 - docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node node -v
 - docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node npm -v
 - docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node yarn -v
+
+You can add an alias or function to your bash profile/zshenv. For example:
+```bash
+function node() {
+    docker run -it --rm -e "TERM=xterm-256color" -v $(PWD):/ws:delegated -w /ws serafinomb/node node $@
+}
+```
 
 ### 4. Database tunneling
 If you are working with a remote database, example Amazon RDS, and you need to enstablish a tunnel connection to connect to it:
@@ -72,8 +78,8 @@ If you are working with a remote database, example Amazon RDS, and you need to e
 + 8       - 33060
 ```
 - (Optional) You can remove the entire "db" section from the docker-compose.yml file
-- Restart the containers with `docker-compose -p $(basename $(dirname $(pwd))) up -d --force-recreate`
-- Install the SSH client with `docker-compose -p $(basename $(dirname $(pwd))) exec phpfpm /bin/bash -c "apt update && apt install openssh-client"`
+- Restart the containers with `docker-compose up -d --force-recreate`
+- Install the SSH client with `docker-compose exec phpfpm /bin/bash -c "apt update && apt install openssh-client"`
 - Enstablish the SSH tunnel with `docker-compose exec phpfpm ssh -i storage/<keypair name>.pem -4 -o ServerAliveInterval=30 -f <user>@<machine ip> -L 33060:<databse dns>:3306 -N`
 - Edit your .env file as follows: `DB_HOST=127.0.0.1` and `DB_PORT=33060`
 ---
@@ -82,7 +88,18 @@ The following docker-compose configuration <https://github.com/devigner/docker-c
 
 ---
 
-#### Notes
+## Notes
+
+Mind that the `composer` container will probably fail the first time for reasons I'm not
+sure about at the moment, I'm a little tired and I'm too lazy to re-run the `docker-compose up -d`
+from a clean app to check. If you get the usual "cannot require composer"-something something
+error just run `docker-compose composer up -d` again.
+I've just re-run a "docker-compose up -d" on a clean project and composer didn't fail but is taking
+its time to install the dependencies. So if it doesn't fail, wait till it's done (it will stop) to
+run any command in your application.
+
+---
+
 After restarting the containers `$ docker-compose up -d --force-recreate` I had the following error when making requests to the nginx instance `$ curl -H "Host: <VIRTUAL_HOST>" 0.0.0.0`:
 ```
 [error] 18#18: *1 directory index of "/usr/share/nginx/html/" is forbidden, client: 172.18.0.1, server: localhost, request: "GET / HTTP/1.1", host: "<VIRTUAL_HOST>"
