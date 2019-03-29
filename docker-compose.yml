@@ -39,7 +39,7 @@ services:
 
   composer:
     build: ./.docker/images/composer
-    command: install
+    command: install --ignore-platform-reqs
     volumes:
       - ../:/var/www/html
 
