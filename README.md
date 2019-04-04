@@ -13,7 +13,7 @@
     - DB_DATABASE=database
     - DB_USERNAME=user
     - DB_PASSWORD=password
-- Optional: Rename `.env.example` into `.env` and customize the variables
+- Optional: Rename `.env.dist` into `.env` and customize the variables
 - Create a new network and run the nginx-proxy container (see 1. below)
 - From whitin the .docker folder, review (and run if needed) the `deploy.sh` script.
     
