@@ -1,150 +1,154 @@
 ## A docker-compose configuration to set up a ready-to-use Laravel environment.
-- PHP 7, with Xdebug
-- MySQL
+- PHP 7.3, Xdebug
+- MySQL 8.0
 - Nginx
 - Composer
 
 ### Usage
-- Clone the repository inside your project root (<project-dir>/.docker for example)
-- Update your database connection configuration:
-    - DB_CONNECTION=mysql
-    - DB_HOST=db
-    - DB_PORT=3306
-    - DB_DATABASE=database
-    - DB_USERNAME=user
-    - DB_PASSWORD=password
-- Optional: Rename `.env.dist` into `.env` and customize the variables
-- Optional: Update the MySQL version in docker-compose.yml ("latest" will be used as default)
-- Create a new network and run the nginx-proxy container (see 1. below)
-- From whitin the .docker folder, review (and run if needed) the `deploy.sh` script.
+- Clone the repository inside your project root: `git clone <url> .docker`
+- Remove from your .env file the following variables:
+    - DB_CONNECTION
+    - DB_HOST
+    - DB_PORT
+    - DB_DATABASE
+    - DB_USERNAME
+    - DB_PASSWORD
+- Optional: Update the VIRTUAL_HOST value in `.docker/.env`
+- From within the .docker folder, run `docker-compose -p $(basename $(dirname $(pwd))) up -d`
     
-You should be able to view your laravel project at http://localhost or at http://VIRTUAL_HOST
+You should be able to view your Laravel project at http://website.localhost or
+at http://$VIRTUAL_HOST
 
-##### Note about docker-compose -p (project)
-To avoid volume collision always remember to pass in a unique project name when running docker-compose. I am currently using the parent folder name as project name. Given this folder structure: `.../my-project/.docker`, running `docker-compose -p $(basename $(dirname $(pwd)))` from within the `.docker` folder will use `my-project` as project name.
+##### Note about docker-compose -p <project-name>
+To avoid volume collision always remember to pass in a unique project name when
+running docker-compose. I am currently using the parent folder name as project
+name. Given this folder structure: `.../my-project/.docker`, running
+`docker-compose -p $(basename $(dirname $(pwd)))` from within the `.docker`
+folder will use `my-project` as project name.
 
-Add this function into your bash profile or zshenv to use the parent folder as project name:
+Add this function to your bash profile or .zshenv to be able to use `dcp` as a
+shortcut: 
 ```bash
 function dcp() {
     docker-compose -p $(basename $(dirname $(pwd))) $@
 }
 ```
+This will set the --project-name argument for you.
 
 ### 1. Reverse proxy and running multiple applications
-Run the following commands to be able to use the custom hostname specified in the .env file (for example
-project-name.client.localhost):
+As of right now it's not possible to run multiple Laravel applications at the
+same time. This is because both the nginx-proxy and database services publish
+hard coded ports. I don't currently see this as a deal-breaker and could be
+fixed by running nginx-proxy either externally or with a different port and by
+setting a custom port for the database service on a per-project basis.
 
+### 2. HTTPS
+To enable HTTPS you simply need to:
+- Generate a .key and .crt file in the .docker/images/nginx-proxy/certs folder
+  by running the following command. The variable VIRTUAL_HOST must be the same
+  to the one you set in the .docker/.env file.
 ```
-$ docker network create nginx-proxy
-$ docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock:ro --net nginx-proxy jwilder/nginx-proxy
+VIRTUAL_HOST=website.localhost bash -c 'openssl req -new -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout images/nginx-proxy/certs/$VIRTUAL_HOST.key -out images/nginx-proxy/certs/$VIRTUAL_HOST.crt -subj "/C=US/ST=Oregon/L=Portland/O=Localhost/OU=Development/CN=$VIRTUAL_HOST"'
 ```
+- Update the nginx-proxy service to expose port 443:
+```
+  3 services:
+  4   nginx-proxy:
+  ...
+  6     ports:
+  7       - 80:80
++ 8       - 443:443
+```
+- Update your Trusted Proxy configuration to trust the caller IP
+```php
+// app/Http/Middleware/TrustProxies.php
+-  15     protected $proxies;
++  15     protected $proxies = '*';
+```
+Your browser will complain about your self-signed SSL certificate. 
 
-As of right now it's not possible to run multiple Laravel applications at the same time. Even if
-we can specify a custom hostname for each of them, the database host and database name is still
-shared accross all the instances. It can be fixed but I've not had the time nor the need to do
-so.
+### 3. Xdebug
+Xdebug is installed and enabled by default and uses port 9000. You just need to
+configure your IDE.
 
-### 2. Xdebug
-Xdebug is installed and enabled by default in the "phpfpm" container. All you need to do to start using
-it is set your private IP in ".docker/images/php-fpm/php.ini" in the "xdebug.remote_host" option.
-I've had some issues setting this up on PHPStorm and will update this section once I've time to understand
-why.
+For PHPStorm, all you need to do is:
+- Install the Browser extension: https://www.jetbrains.com/help/phpstorm/browser-debugging-extensions.html
+- Start listening, from the Menu: Run > Start Listening for PHP Debug Connections 
 
-### 3. Node (NPM, Yarn)
-You'll probably also need npm/yarn, I'm currently using the "serafinomb/node" docker image
-(docker pull serafinomb/node). Usage can be as follows:
-- `docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node node -v`
-- `docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node npm -v`
-- `docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node yarn -v`
+### 4. Node (NPM, Yarn)
+You'll probably need npm/yarn, I'm currently using the "serafinomb/node"
+docker image. Usage is as follows:
+- docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node node -v
+- docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node npm -v
+- docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node yarn -v
 
-You can add an alias or function to your bash profile/zshenv. For example:
+You can add an alias or function to your bash profile/.zshenv for each one of
+them. For example:
 ```bash
 function node() {
     docker run -it --rm -e "TERM=xterm-256color" -v $(PWD):/ws:delegated -w /ws serafinomb/node node $@
 }
+
+function npm() {
+    node npm $@
+}
+
+function npx() {
+    node npx $@
+}
+
+function yarn() {
+    node yarn $@
+}
 ```
 
-### 4. Database tunneling
-If you are working with a remote database, example Amazon RDS, and you need to enstablish a tunnel connection to connect to it:
+### 5. Database tunneling
+If you are working with a remote database, example Amazon RDS, and you need to
+establish a tunnel connection to connect to it:
 
-- Copy your PEM certificate into the `/app/storage` folder
-- Add the following line to your `.gitignore` to make sure not to commit your PEM file by mistake: `/storage/*.pem`
-- Edit the `docker-compose.yml`, adding the following line inside the "services", "php", "expose" section: `- 33060`. It should look something like this:
+- Copy your PEM certificate into `<project-dir>/app/storage`
+- Add the following line to your `.gitignore` to make sure not to commit your
+  PEM file by mistake: `/storage/*.pem`
+- Edit the `docker-compose.yml` to expose the port 33060 from the php-fpm service:
 ```yml
-  3 services:
-  4   phpfpm:
-  5     build: ./.docker/images/php-fpm
-  6     expose:
-  7       - 9000
-+ 8       - 33060
+   3 services:
+   ...
+  12   php-fpm:
+  13     build: ./images/php-fpm
++ 14     ports:
++ 15       - 33060
 ```
-- (Optional) You can remove the entire "db" section from the docker-compose.yml file
+- Edit the php-fpm Dockerfile in `.docker/images/php-fpm/Dockerfile` to install
+`openssh-client`:
+```
+  3 RUN apt-get update && \
+- 4     apt-get install -y mysql-client && \
++ 4     apt-get install -y mysql-client openssh-client && \
+```
+- (Optional) Remove the entire "db" section from the docker-compose.yml file
+- Update your `docker-compose.yml` php-fpm service environments to replace DB_HOST:
+```
+- 19       DB_HOST: db
++ 19       DB_HOST: 127.0.0.1
+```
 - Restart the containers with `dcp up -d --force-recreate`
-- Install the SSH client with `dcp exec phpfpm /bin/bash -c "apt update && apt install openssh-client"`
-- Enstablish the SSH tunnel with `dcp exec phpfpm ssh -i storage/<keypair name>.pem -4 -o ServerAliveInterval=30 -f <user>@<machine ip> -L 33060:<databse dns>:3306 -N`
-- Edit your .env file as follows: `DB_HOST=127.0.0.1` and `DB_PORT=33060`
-
----
-
-### 5. Debugging
-
-#### Authentication plugin 'caching_sha2_password'
-While creating a new environment I encountered the following error while connecting to MySQL through Sequel Pro:
-```
-MySQL said: Authentication plugin 'caching_sha2_password' cannot be loaded: dlopen(/usr/local/lib/plugin/caching_sha2_password.so, 2): image not found
-```
-
-I solved this by logging in into the mysql docker-compose container and running:
-1. `docker exec -it <app_name>_db_1 bash`
-2. `mysql -u root -p` (it'll ask for a password: 123456)
-3. `ALTER USER 'user' IDENTIFIED WITH mysql_native_password BY 'password';`
-
-From <https://stackoverflow.com/a/50130973/2141119>
-
-#### Problems while changing MySQL version
-If by mistake you start and build the environment with the wrong MySQL version, you'll get an error after changing it. Simply remove the environment volume and
-rebuild:
-- `docker volume list # to list all the volumes, find the one to remove`
-- `docker volume rm <volume name>`
-- `dcp up -d --build`
-
-
+- Establish the SSH tunnel with `dcp exec php-fpm ssh -i storage/<keypair name>.pem -4 -o ServerAliveInterval=30 -f <user>@<machine ip> -L 33060:<databse dns>:3306 -N`
 ---
 
 The following docker-compose configuration <https://github.com/devigner/docker-compose-php> has been used as a starting point.
 
 ---
 
-## Notes
+## Troubleshooting
 
-Mind that the `composer` container will probably fail the first time for reasons I'm not
-sure about at the moment, I'm a little tired and I'm too lazy to re-run the `dcp up -d`
-from a clean app to check. If you get the usual "cannot require composer"-something something
-error just run `dcp composer up -d` again.
-I've just re-run a "dcp up -d" on a clean project and composer didn't fail but is taking
-its time to install the dependencies. So if it doesn't fail, wait till it's done (it will stop) to
-run any command in your application.
-
----
-
-After restarting the containers `$ dcp up -d --force-recreate` I had the following error when making requests to the nginx instance `$ curl -H "Host: <VIRTUAL_HOST>" 0.0.0.0`:
+While creating a new environment I encountered the following error while connecting to MySQL through Sequel Pro:
 ```
-[error] 18#18: *1 directory index of "/usr/share/nginx/html/" is forbidden, client: 172.18.0.1, server: localhost, request: "GET / HTTP/1.1", host: "<VIRTUAL_HOST>"
+MySQL said: Authentication plugin 'caching_sha2_password' cannot be loaded: dlopen(/usr/local/lib/plugin/caching_sha2_password.so, 2): image not found
 ```
-I debugged this thing for almost two evenings and finally solved it by removing `$ docker rm -f <container id> ...` all the related containers and running a `$ dcp up -d`.
 
-Use `$ docker ps -a` for a list of all containers.
+I solved this by logging in into the mysql docker-compose container and running:
+1. docker exec -it <app_name>_db_1 bash
+2. mysql -u root -p 123456
+3. `ALTER USER 'user' IDENTIFIED WITH mysql_native_password BY 'password';`
 
----
-
-I had a 503 permission issue on the Mac Pro (read Hackintosh) at home. I tried this evening to do the same steps on my Macbook Air and everything went fine.
-I've to investigate this and try again on the Mac Pro but I've the feeling that the issue might have been caused by running the `deploy.sh` script as "sudo".
-I suggest to `rm` the "app" folder completely and re-clone your project, and run the commands manually. Until I get to make a good deploy script.
-Right– I fixed this by running `chmod -R g+rwx app`.
-
----
-
-I also had problems connecting to the MySQL database, something about allowed domain to connect to the database. I had no issue on this machine (Macbook Air) though.
-I need to investigate into it.
-I tried again on my Mac Pro and running the `deploy.sh` script as "sudo" might have caused the MySQL issue. I removed the volumes and rerun `dcp up -d`
-and everything is working fine now. Use `docker volume` to manage your volumes.
+From <https://stackoverflow.com/a/50130973/2141119>
