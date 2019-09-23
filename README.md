@@ -78,9 +78,9 @@ For PHPStorm, all you need to do is:
 ### 4. Node (NPM, Yarn)
 You'll probably need npm/yarn, I'm currently using the "serafinomb/node"
 docker image. Usage is as follows:
-- docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node node -v
-- docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node npm -v
-- docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node yarn -v
+- `docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node node -v`
+- `docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node npm -v`
+- `docker run -it --rm -v $(PWD):/ws:delegated -w /ws serafinomb/node yarn -v`
 
 You can add an alias or function to your bash profile/.zshenv for each one of
 them. For example:
@@ -100,6 +100,12 @@ function npx() {
 function yarn() {
     node yarn $@
 }
+```
+
+And if you need to run "npm run start" consider using the following command which should have better performances:
+```bash
+docker run -it --rm -v $PWD:/ws:delegated -v $PWD/node_modules -w /ws -p 3000:3000 -e CHOKIDAR_USEPOLLING=true -e CHOKIDAR_INTERVAL=250 serafinomb/node npm run start
+
 ```
 
 ### 5. Database tunneling
