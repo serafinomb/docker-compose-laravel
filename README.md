@@ -1,8 +1,7 @@
 ## A docker-compose configuration to set up a ready-to-use Laravel environment.
-- PHP 7.3, Xdebug
+- PHP 7.3, Xdebug, Composer
 - MySQL 8.0
 - Nginx
-- Composer
 
 ### Usage
 - Clone the repository inside your project root: `git clone <url> .docker`
@@ -44,14 +43,14 @@ setting a custom port for the database service on a per-project basis.
 
 ### 2. HTTPS
 To enable HTTPS you simply need to:
-- Generate a .key and .crt file in the .docker/images/nginx-proxy/certs folder
-  by running the following command. The variable VIRTUAL_HOST must be the same
-  to the one you set in the .docker/.env file.
+- Generate a .key and .crt file into the .docker/images/nginx-proxy/certs folder
+  by running the following command from the docker folder. The variable
+  VIRTUAL_HOST must be the same to the one you set in the .docker/.env file.
 ```
 VIRTUAL_HOST=website.localhost bash -c 'openssl req -new -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout images/nginx-proxy/certs/$VIRTUAL_HOST.key -out images/nginx-proxy/certs/$VIRTUAL_HOST.crt -subj "/C=US/ST=Oregon/L=Portland/O=Localhost/OU=Development/CN=$VIRTUAL_HOST"'
 ```
 - Update the nginx-proxy service to expose port 443:
-```
+```yml
   3 services:
   4   nginx-proxy:
   ...
@@ -59,7 +58,7 @@ VIRTUAL_HOST=website.localhost bash -c 'openssl req -new -x509 -nodes -sha256 -d
   7       - 80:80
 + 8       - 443:443
 ```
-- Update your Trusted Proxy configuration to trust the caller IP
+- If present, update your Trusted Proxy configuration to trust the caller IP
 ```php
 // app/Http/Middleware/TrustProxies.php
 -  15     protected $proxies;
@@ -104,7 +103,7 @@ function yarn() {
 
 And if you need to run "npm run start" consider using the following command which should have better performances:
 ```bash
-docker run -it --rm -v $PWD:/ws:delegated -v $PWD/node_modules -w /ws -p 3000:3000 -e CHOKIDAR_USEPOLLING=true -e CHOKIDAR_INTERVAL=250 serafinomb/node npm run start
+docker run -it --rm -v $PWD:/ws:delegated,ro -v $PWD/node_modules -w /ws -p 3000:3000 -e CHOKIDAR_USEPOLLING=true -e CHOKIDAR_INTERVAL=250 serafinomb/node npm run start
 
 ```
 
