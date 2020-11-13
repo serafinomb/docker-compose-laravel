@@ -7,7 +7,7 @@ RUN apt-get update && \
     docker-php-ext-enable xdebug
 
 RUN php -r "copy('https://raw.githubusercontent.com/composer/getcomposer.org/55e3ac0516cf01802649468315cd863bcd46a73f/web/installer', 'composer-setup.php');"
-RUN php composer-setup.php --install-dir=/usr/bin --filename=composer
+RUN php composer-setup.php --install-dir=/usr/bin --filename=composer --version=1.10.17
 RUN php -r "unlink('composer-setup.php');"
 
 CMD ["php-fpm"]
